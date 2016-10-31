@@ -5,39 +5,86 @@
  */
 package messagingappclient;
 
+import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.QueueingConsumer;
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.simple.JSONObject;
 
 /**
  *
  * @author vanyadeasy
  */
 public class MessagingAppClient {
+    private Connection connection;
+    private Channel channel;
+    private String requestQueueName = "messaging_app";
+    private String replyQueueName;
+    private QueueingConsumer consumer;
 
-    private final static String QUEUE_NAME = "message";
-    
-    public static void main(String[] args) {
+    public MessagingAppClient() throws Exception {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+        connection = factory.newConnection();
+        channel = connection.createChannel();
+
+        replyQueueName = channel.queueDeclare().getQueue();
+        consumer = new QueueingConsumer(channel);
+        channel.basicConsume(replyQueueName, true, consumer);
+    }
+
+    public String call(String message) throws Exception {
+        String response = null;
+        String corrId = UUID.randomUUID().toString();
+
+        BasicProperties props = new BasicProperties
+                                    .Builder()
+                                    .correlationId(corrId)
+                                    .replyTo(replyQueueName)
+                                    .build();
+
+        channel.basicPublish("", requestQueueName, props, message.getBytes("UTF-8"));
+
+        while (true) {
+          QueueingConsumer.Delivery delivery = consumer.nextDelivery();
+          if (delivery.getProperties().getCorrelationId().equals(corrId)) {
+            response = new String(delivery.getBody(),"UTF-8");
+            break;
+          }
+        }
+
+        return response;
+    }
+
+    public void close() throws Exception {
+        connection.close();
+    }
+
+    public static void main(String[] argv) {
+        MessagingAppClient client = null;
+        String response = null;
         try {
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("localhost");
-            Connection connection = factory.newConnection();
-            Channel channel = connection.createChannel();
-            
-            channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-            String message = "Hello World!";
-            channel.basicPublish("", QUEUE_NAME, null, message.getBytes("UTF-8"));
-            System.out.println(" [x] Sent '" + message + "'");
-            
-            channel.close();
-            connection.close();
-        } catch (IOException | TimeoutException ex) {
-            Logger.getLogger(MessagingAppClient.class.getName()).log(Level.SEVERE, null, ex);
+            client = new MessagingAppClient();
+
+            response = client.call(Command.signup("aburr","123456").toJSONString());
+            System.out.println(" [.] Got '" + response + "'");
+        }
+        catch  (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            if (client != null) {
+                try {
+                    client.close();
+                }
+                catch (Exception ignore) {}
+            }
         }
     }
-    
 }

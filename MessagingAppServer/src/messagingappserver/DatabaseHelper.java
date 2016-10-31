@@ -40,7 +40,7 @@ public class DatabaseHelper {
     
     public boolean insertUser(String username, String password) {
         try {
-            if(selectUser(username)!=null) {
+            if(!selectUser(username).isEmpty()) {
                 System.out.println("Username already exists.");
                 return false;
             }
