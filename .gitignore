@@ -1,0 +1,13 @@
+MessagingAppClient/nbproject/private/
+MessagingAppClient/build/
+MessagingAppClient/nbbuild/
+MessagingAppClient/dist/
+MessagingAppClient/nbdist/
+MessagingAppClient/.nb-gradle/
+
+MessagingAppServer/nbproject/private/
+MessagingAppServer/build/
+MessagingAppServer/nbbuild/
+MessagingAppServer/dist/
+MessagingAppServer/nbdist/
+MessagingAppServer/.nb-gradle/
