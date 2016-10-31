@@ -21,6 +21,7 @@ public class MessagingAppServer {
     private final static String QUEUE_NAME = "message";
     
     public static void main(String[] args) {
+        /*
         try {
             ConnectionFactory factory = new ConnectionFactory();
             factory.setHost("localhost");
@@ -43,6 +44,10 @@ public class MessagingAppServer {
         } catch (TimeoutException | IOException ex) {
             Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
         }
+        */
+        DatabaseHelper dbHelper = new DatabaseHelper();
+        System.out.println(dbHelper.selectGroupByUser("percyjackson").toString());
+        
     }
     
 }
