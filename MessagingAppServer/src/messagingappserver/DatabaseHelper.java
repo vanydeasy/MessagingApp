@@ -117,4 +117,25 @@ public class DatabaseHelper {
         }
         return users;
     }
+    
+    public boolean removeGroupMember(int groupId, String username, String removedMember) {
+        JSONArray members = selectUserOnGroup(groupId);
+        try {
+            if(!members.toString().contains(username) || !members.toString().contains(removedMember)) {
+                //System.out.println("haha");
+                return false;
+            }
+            String query = "DELETE FROM `group_member` WHERE username = ?";
+            try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
+                dbStatement.setString(1, removedMember);
+                dbStatement.executeUpdate();
+                dbStatement.close();
+                
+                System.out.println(removedMember + " has been removed from the group");
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return true;
+    }
 }

@@ -111,6 +111,19 @@ public class MessagingAppServer {
                     response.put("message", "You are not registered!");
                 }
                 break;
+            case "remove_member":
+                int groupId = Integer.parseInt(request.get("group_id").toString());
+                username = request.get("username").toString();
+                String member = request.get("removed_member").toString();
+                if(dbHelper.removeGroupMember(groupId, username, member)) {
+                    response.put("status", true);
+                    response.put("message", member + " has been removed from the group");
+                }
+                else {
+                    response.put("status", false);
+                    response.put("message", "Failed removing member");
+                }
+                break;
             default:
                 break;
         }

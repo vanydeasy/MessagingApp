@@ -49,11 +49,12 @@ public class Command {
         return result;
     }
     
-    public static JSONObject removeMember(String username, String removedMember) {
+    public static JSONObject removeMember(int groupId, String username, String removedMember) {
         JSONObject result = new JSONObject();
         result.put("command", "remove_member");
+        result.put("group_id", groupId);
         result.put("username", username);
-        result.put("remove", removedMember);
+        result.put("removed_member", removedMember);
         
         return result;
     }
