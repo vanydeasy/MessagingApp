@@ -31,30 +31,21 @@ public class Command {
         return result;
     }
     
-    public static JSONObject createNewGroup(String username, String groupName) {
+    public static JSONObject createGroup(String username, String groupName, JSONArray members) {
         JSONObject result = new JSONObject();
         result.put("command", "create_group");
         result.put("username", username);
         result.put("group_name", groupName);
+        result.put("members", members);
         
         return result;
     }
     
-    public static JSONObject addGroupMember(String username, JSONArray member) {
+    public static JSONObject leaveGroup(int groupId, String username) {
         JSONObject result = new JSONObject();
-        result.put("command", "add_member");
-        result.put("username", username);
-        result.put("member", member);
-        
-        return result;
-    }
-    
-    public static JSONObject removeMember(int groupId, String username, String removedMember) {
-        JSONObject result = new JSONObject();
-        result.put("command", "remove_member");
+        result.put("command", "leave_group");
         result.put("group_id", groupId);
         result.put("username", username);
-        result.put("removed_member", removedMember);
         
         return result;
     }

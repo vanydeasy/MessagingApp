@@ -72,7 +72,7 @@ public class MessagingAppClient {
         try {
             client = new MessagingAppClient();
 
-            response = client.call(Command.removeMember(2, "percyjackson","jasongrace").toJSONString());
+            response = client.call(Command.leaveGroup(2, "valdezleo").toJSONString());
             System.out.println(" [.] Got '" + response + "'");
         }
         catch  (Exception e) {

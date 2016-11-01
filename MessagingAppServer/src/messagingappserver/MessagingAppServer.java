@@ -7,6 +7,7 @@ package messagingappserver;
 
 import com.rabbitmq.client.*;
 import com.rabbitmq.client.AMQP.BasicProperties;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -111,18 +112,30 @@ public class MessagingAppServer {
                     response.put("message", "You are not registered!");
                 }
                 break;
-            case "remove_member":
+            case "leave_group":
                 int groupId = Integer.parseInt(request.get("group_id").toString());
                 username = request.get("username").toString();
-                String member = request.get("removed_member").toString();
-                if(dbHelper.removeGroupMember(groupId, username, member)) {
+                if(dbHelper.removeGroupMember(groupId, username)) {
                     response.put("status", true);
-                    response.put("message", member + " has been removed from the group");
+                    response.put("message", " You left the group.");
                 }
                 else {
                     response.put("status", false);
-                    response.put("message", "Failed removing member");
+                    response.put("message", "Failed.");
                 }
+                break;
+            case "create_group":
+                username = request.get("username").toString();
+                String groupName = request.get("group_name").toString();
+                /*JSONArray members = request.get("members");
+                if(dbHelper.createNewGroup(groupName, username, members)) {
+                    response.put("status", true);
+                    response.put("message", " You left the group.");
+                }
+                else {
+                    response.put("status", false);
+                    response.put("message", "Failed.");
+                }*/
                 break;
             default:
                 break;

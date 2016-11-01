@@ -118,21 +118,70 @@ public class DatabaseHelper {
         return users;
     }
     
-    public boolean removeGroupMember(int groupId, String username, String removedMember) {
+    public boolean removeGroupMember(int groupId, String username) {
         JSONArray members = selectUserOnGroup(groupId);
         try {
-            if(!members.toString().contains(username) || !members.toString().contains(removedMember)) {
+            if(!members.toString().contains(username)) {
                 //System.out.println("haha");
                 return false;
             }
             String query = "DELETE FROM `group_member` WHERE username = ?";
             try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
-                dbStatement.setString(1, removedMember);
+                dbStatement.setString(1, username);
                 dbStatement.executeUpdate();
                 dbStatement.close();
                 
-                System.out.println(removedMember + " has been removed from the group");
+                System.out.println(username + " has been removed from the group");
             }
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return true;
+    }
+     
+    public int insertGroup(String groupName) {
+        int id = 0;
+        String query1 = "INSERT INTO `group` (name) VALUES(?)";
+        try (PreparedStatement dbStatement = conn.prepareStatement(query1)) {
+            dbStatement.setString(1, groupName);
+            dbStatement.executeUpdate();
+            
+            ResultSet rs = dbStatement.getGeneratedKeys();
+                if(rs.next())
+                {
+                    id = rs.getInt(1);
+                }
+            
+            dbStatement.close();
+
+            System.out.println("Successfully create a new group");
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return id;
+    }
+    
+    public boolean createNewGroup(String groupName, String username, JSONArray members) {
+        int groupId = insertGroup(groupName);
+        if (groupId == 0) {
+            return false;
+        }
+        String query = "INSERT INTO `group_member` (group_id, username, isAdmin) VALUES(?, ?, ?)";
+        try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
+            dbStatement.setInt(1, groupId);
+            dbStatement.setString(2, username);
+            dbStatement.setInt(3, 1);
+            dbStatement.executeUpdate();
+            
+            for (int i=0; i<members.size(); i++) {
+                dbStatement.setInt(1, groupId);
+                dbStatement.setString(2, members.get(i).toString());
+                dbStatement.setInt(3, 0);
+                dbStatement.executeUpdate();
+            }
+            dbStatement.close();
+
+            System.out.println("Successfully add group members");
         } catch (SQLException ex) {
             Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
         }
