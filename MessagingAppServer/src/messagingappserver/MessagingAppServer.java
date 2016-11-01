@@ -78,12 +78,12 @@ public class MessagingAppServer {
     public JSONObject doCommand(JSONObject request) {
         JSONObject response = new JSONObject();
         response.put("command", request.get("command"));
-        String command = request.get("command").toString();
-        
+        String command = request.get("command").toString();        
         System.out.println(">> Command: "+command);
+        String username = new String();
         switch(command) {
             case "signup":
-                String username = request.get("username").toString();
+                username = request.get("username").toString();
                 String password = request.get("password").toString();
                 if(dbHelper.insertUser(username,password)) {
                     response.put("status", true);
@@ -92,6 +92,23 @@ public class MessagingAppServer {
                 else {
                     response.put("status", false);
                     response.put("message", "Username already exists.");
+                }
+                break;
+            case "login":
+                username = request.get("username").toString();
+                String pw = request.get("password").toString();
+                JSONObject user = dbHelper.selectUser(username);
+                if (!user.isEmpty()) {
+                    if (user.get("username").equals(username) && user.get("password").equals(pw)) {
+                        response.put("status", true);
+                        response.put("message", "Login has been successful!");
+                    } else {
+                        response.put("status", false);
+                        response.put("message", "Your username and password does not match!");
+                    }
+                } else {
+                    response.put("status", false);
+                    response.put("message", "You are not registered!");
                 }
                 break;
             default:

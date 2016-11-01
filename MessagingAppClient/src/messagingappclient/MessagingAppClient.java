@@ -72,7 +72,7 @@ public class MessagingAppClient {
         try {
             client = new MessagingAppClient();
 
-            response = client.call(Command.signup("aburr","123456").toJSONString());
+            response = client.call(Command.login("aburr","1234567").toJSONString());
             System.out.println(" [.] Got '" + response + "'");
         }
         catch  (Exception e) {
