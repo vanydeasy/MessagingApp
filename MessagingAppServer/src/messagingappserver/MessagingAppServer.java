@@ -155,6 +155,15 @@ public class MessagingAppServer {
             case ADD_FRIEND:
                 username = request.get("username").toString();
                 String friendName = request.get("friend_name").toString();
+                if(dbHelper.addFriend(username, friendName)) {
+                    response.put("status", true);
+                    response.put("message", "A friend has been added.");
+                }
+                else {
+                    response.put("status", false);
+                    response.put("message", "A friend cannot be added");
+                }
+                break;
             default:
                 response.put("status", false);
                 response.put("message", "Command is unrecognizable.");
