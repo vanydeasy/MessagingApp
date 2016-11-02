@@ -15,6 +15,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  *
@@ -227,6 +229,40 @@ public class DatabaseHelper {
                 
                 System.out.println("Successfully added a friend");
             }
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return true;
+    }
+    
+    public boolean addGroupMember(String groupName, String username, JSONArray members) {
+        int groupId = 0;
+        JSONArray groups = new JSONArray();
+        groups = selectGroupByUser(username);
+        JSONParser parser = new JSONParser();
+        JSONObject temp = new JSONObject();
+        for (int i=0; i<groups.size(); i++) {
+            try {
+                temp = (JSONObject)parser.parse(groups.get(i).toString());
+            } catch (ParseException ex) {
+                Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            if (temp.get("name").equals(groupName)) {
+                groupId = Integer.parseInt(temp.get("group_id").toString());
+                break;
+            }
+        }
+        String query = "INSERT INTO `group_member` (group_id, username, isAdmin) VALUES(?, ?, ?)";
+        try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
+            for (int i=0; i<members.size(); i++) {
+                dbStatement.setInt(1, groupId);
+                dbStatement.setString(2, members.get(i).toString());
+                dbStatement.setInt(3, 0);
+                dbStatement.executeUpdate();
+            }
+            dbStatement.close();
+
+            System.out.println("Successfully add group members");
         } catch (SQLException ex) {
             Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
         }

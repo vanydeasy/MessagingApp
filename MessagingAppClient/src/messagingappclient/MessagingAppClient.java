@@ -5,17 +5,11 @@
  */
 package messagingappclient;
 
-import java.sql.Array;
-import java.util.ArrayList;
-import java.util.List;
 import org.json.simple.JSONObject;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.simple.JSONArray;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-import static java.lang.Math.toIntExact;
 
 public class MessagingAppClient {
     private static final MessagingApp QUEUE_HANDLER = new MessagingApp();
@@ -85,7 +79,7 @@ public class MessagingAppClient {
                             QUEUE_HANDLER.send(Command.getGroup(username).toJSONString());
                             break;
                         case 7: // Get friends
-                            QUEUE_HANDLER.send(Command.geFriend(username).toJSONString());
+                            QUEUE_HANDLER.send(Command.getFriend(username).toJSONString());
                         default:
                             System.out.println("Command is unrecognizable. Try again.");
                             break;
@@ -99,17 +93,6 @@ public class MessagingAppClient {
         } catch (Exception ex) {
             Logger.getLogger(MessagingAppClient.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }
-    
-    public static JSONObject stringToJson(String input) {
-        JSONObject message = null;
-        try {
-            JSONParser parser = new JSONParser();
-            message = (JSONObject)parser.parse(input);
-        } catch (ParseException ex) {
-            Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return message;
     }
     
     public static void login() {
@@ -130,5 +113,23 @@ public class MessagingAppClient {
         else {
             QUEUE_HANDLER.send(Command.signup(username, password).toJSONString());
         }
+    }
+    
+    public static void addGroupMember() {
+        Scanner reader = new Scanner(System.in);
+        JSONArray friends = new JSONArray();
+        String name = "";
+        
+        System.out.print("Friend's name (type \"end\" to stop): ");
+        name = reader.next();
+        while (!name.equals("end")) {
+            friends.add(name);
+            System.out.print("Friend's name (type \"end\" to stop): ");
+            name = reader.next();
+        }
+        
+        System.out.print("Enter group name: ");
+        String groupName = reader.next();
+        QUEUE_HANDLER.send(Command.addGroupMember(username, groupName, friends).toJSONString());
     }
 }

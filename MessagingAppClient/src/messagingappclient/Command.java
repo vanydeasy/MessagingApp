@@ -67,11 +67,21 @@ public class Command {
         return result;
     }
     
-        public static JSONObject geFriend(String username) {
+    public static JSONObject getFriend(String username) {
         JSONObject result = new JSONObject();
         result.put("command", "get_friend");
         result.put("username", username);
+        
+        return result;
+    }
 
+    public static JSONObject addGroupMember(String username, String groupName, JSONArray members) {
+        JSONObject result = new JSONObject();
+        result.put("command", "add_member");
+        result.put("username", username);
+        result.put("group_name", groupName);
+        result.put("members", members);
+        
         return result;
     }
 }

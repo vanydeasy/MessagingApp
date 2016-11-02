@@ -27,6 +27,7 @@ public class MessagingAppServer {
     private final String LEAVE_GROUP = "leave_group";
     private final String ADD_FRIEND = "add_friend";
     private final String GET_GROUP = "get_group";
+    private final String ADD_GROUP_MEMBER = "add_member";
     
     public static void main(String[] argv) {
         MessagingAppServer server = new MessagingAppServer();
@@ -44,7 +45,7 @@ public class MessagingAppServer {
         try {
             Channel channel = connection.createChannel();
             channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+            System.out.println("[*] Waiting for messages. To exit press CTRL+C");
 
             Consumer consumer = new DefaultConsumer(channel) {
                 @Override
@@ -76,7 +77,7 @@ public class MessagingAppServer {
         JSONObject response = new JSONObject();
         response.put("command", request.get("command"));
         String command = request.get("command").toString();        
-        System.out.println(">> Command: "+command);
+        System.out.println("[!] Command: "+command);
         String username = null;
         switch(command) {
             case SIGNUP:
@@ -162,6 +163,27 @@ public class MessagingAppServer {
                     response.put("message", "User does not join on any groups.");
                 else
                     response.put("message", "Groups have been received.");
+                break;
+            case ADD_GROUP_MEMBER:
+                username = request.get("username").toString();
+                String group = request.get("group_name").toString();
+                JSONParser parse = new JSONParser();
+                JSONArray member = null;
+                {
+                    try {
+                        member = (JSONArray)parse.parse(request.get("members").toString());
+                    } catch (ParseException ex) {
+                        Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                if(dbHelper.addGroupMember(group, username, member)) {
+                    response.put("status", true);
+                    response.put("message", "Successfully added new member(s).");
+                }
+                else {
+                    response.put("status", false);
+                    response.put("message", "Failed.");
+                }
                 break;
             default:
                 response.put("status", false);
