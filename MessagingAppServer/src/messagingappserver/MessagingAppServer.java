@@ -26,6 +26,7 @@ public class MessagingAppServer {
     private final String CREATE_GROUP = "create_group";
     private final String LEAVE_GROUP = "leave_group";
     private final String ADD_FRIEND = "add_friend";
+    private final String GET_GROUP = "get_group";
     
     public static void main(String[] argv) {
         MessagingAppServer server = new MessagingAppServer();
@@ -163,6 +164,16 @@ public class MessagingAppServer {
                     response.put("status", false);
                     response.put("message", "A friend cannot be added");
                 }
+                break;
+            case GET_GROUP:
+                username = request.get("username").toString();
+                JSONArray groups = dbHelper.selectGroupByUser(username);
+                response.put("status", true);
+                response.put("groups", groups);
+                if(groups.size()==0)
+                    response.put("message", "User does not join on any groups.");
+                else
+                    response.put("message", "Groups have been received.");
                 break;
             default:
                 response.put("status", false);

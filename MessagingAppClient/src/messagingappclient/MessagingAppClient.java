@@ -5,6 +5,9 @@
  */
 package messagingappclient;
 
+import java.sql.Array;
+import java.util.ArrayList;
+import java.util.List;
 import org.json.simple.JSONObject;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -12,7 +15,7 @@ import java.util.logging.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
+import static java.lang.Math.toIntExact;
 
 public class MessagingAppClient {
     private static final MessagingApp QUEUE_HANDLER = new MessagingApp();
@@ -28,6 +31,8 @@ public class MessagingAppClient {
         
         Scanner scanner = new Scanner(System.in);
         
+        QUEUE_HANDLER.listen(username);
+        
         // Command
         Integer option;
         do {
@@ -38,7 +43,7 @@ public class MessagingAppClient {
             System.out.println("5. Add new friend");
             System.out.println("6. Exit");
             
-            option = scanner.nextInt();
+            System.out.print("[] "); option = scanner.nextInt();
             switch(option) {
                 case 1: // Send message to friend
                     
@@ -50,7 +55,7 @@ public class MessagingAppClient {
                     response = createNewGroup();
                     break;
                 case 4: // Leave group
-                    
+                    response = leaveGroup();
                     break;
                 case 5: // Add new friend
                     response = addFriend();
@@ -63,7 +68,7 @@ public class MessagingAppClient {
                     System.out.println("Command is unrecognizable. Try again.");
                     break;
             }
-            if(response != null) System.out.println(">> "+response.get("message"));
+            if(response != null) System.out.println("[*] "+response.get("message"));
         } while(option != 6);
         try {
             QUEUE_HANDLER.close();
@@ -145,5 +150,42 @@ public class MessagingAppClient {
             Logger.getLogger(MessagingAppClient.class.getName()).log(Level.SEVERE, null, ex);
         }
         return stringToJson(response);
+    }
+    
+    public static JSONObject getGroup() {
+        String response = null;
+        try {
+            response = QUEUE_HANDLER.call(Command.getGroup(username).toJSONString());
+        } catch (Exception ex) {
+            Logger.getLogger(MessagingAppClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return stringToJson(response);
+    }
+    
+    public static JSONObject leaveGroup() {
+        Scanner reader = new Scanner(System.in);
+        JSONParser parser = new JSONParser();
+        JSONObject response = getGroup();
+        try {
+            JSONArray groups = (JSONArray)parser.parse(response.get("groups").toString());
+            List<JSONObject> listGroups = new ArrayList<>();
+            for(int i=0; i < groups.size(); i++) {
+                JSONObject group = (JSONObject)parser.parse(groups.get(i).toString());
+                listGroups.add(group);
+                System.out.println((i+1)+". "+group.get("name")+" ("+group.get("group_id")+")");
+            }
+            if(listGroups.size() > 0) {
+                System.out.print("No. group: ");
+                String groupId =  ""+listGroups.get(reader.nextInt()-1).get("group_id");
+                try {
+                    response = stringToJson(QUEUE_HANDLER.call(Command.leaveGroup(Integer.valueOf(groupId), username).toJSONString()));
+                } catch (Exception ex) {
+                    Logger.getLogger(MessagingAppClient.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        } catch (ParseException ex) {
+            Logger.getLogger(MessagingAppClient.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return response;
     }
 }

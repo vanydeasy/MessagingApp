@@ -5,20 +5,12 @@
  */
 package messagingappclient;
 
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.QueueingConsumer;
+import com.rabbitmq.client.*;
 import java.io.IOException;
-import java.util.Scanner;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 /**
  *
@@ -77,6 +69,25 @@ public class MessagingApp {
             channel.queueDeclare(queueName, false, false, false, null);
             channel.basicConsume(queueName, true, consumer);
         } catch (IOException ex) {
+            Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void listen(String queueName) {
+        this.queueName = queueName;
+        Consumer consume = new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, 
+                    AMQP.BasicProperties properties, byte[] body) throws IOException {
+                String message = new String(body, "UTF-8");
+                System.out.println("[x] Received '" + message + "'");
+            }
+        };
+        try {
+            channel.close();
+            channel = connection.createChannel();
+            channel.basicConsume(queueName, true, consume);
+        } catch (TimeoutException | IOException ex) {
             Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

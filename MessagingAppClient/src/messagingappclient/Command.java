@@ -58,4 +58,12 @@ public class Command {
         
         return result;
     }
+   
+   public static JSONObject getGroup(String username) {
+       JSONObject result = new JSONObject();
+        result.put("command", "get_group");
+        result.put("username", username);
+        
+        return result;
+   }
 }
