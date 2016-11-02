@@ -10,6 +10,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.simple.JSONArray;
@@ -142,7 +143,7 @@ public class DatabaseHelper {
     public int insertGroup(String groupName) {
         int id = 0;
         String query1 = "INSERT INTO `group` (name) VALUES(?)";
-        try (PreparedStatement dbStatement = conn.prepareStatement(query1)) {
+        try (PreparedStatement dbStatement = conn.prepareStatement(query1,Statement.RETURN_GENERATED_KEYS)) {
             dbStatement.setString(1, groupName);
             dbStatement.executeUpdate();
             

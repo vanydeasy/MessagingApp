@@ -5,6 +5,7 @@
  */
 package messagingappclient;
 
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.json.simple.JSONArray;
@@ -24,15 +25,19 @@ public class MessagingAppClient {
             System.out.println(response.get("message")+"\n");
         } while(!(Boolean)response.get("status"));
         
-        System.out.println("hai");
+        Scanner scanner = new Scanner(System.in);
         // Command
-        try {
-            JSONArray members = new JSONArray();
-            members.add("pipink");
-            String res = client.call(Command.createGroup("vanydeasy", "haiho", members).toJSONString());
-            System.out.println(res);
-        } catch (Exception ex) {
-            Logger.getLogger(MessagingAppClient.class.getName()).log(Level.SEVERE, null, ex);
+        while(true) {
+            System.out.println("1. Send message to friend");
+            System.out.println("2. Send message to group");
+            System.out.println("3. Create new group");
+            System.out.println("4. Leave group");
+            System.out.println("5. Add new friend");
+            
+            String option = scanner.next();
+            switch(option) {
+                
+            }
         }
         
     }

@@ -141,7 +141,7 @@ public class MessagingAppServer {
                 JSONArray members = null;
                 {
                     try {
-                        members = (JSONArray)parser.parse(request.get("member").toString());
+                        members = (JSONArray)parser.parse(request.get("members").toString());
                     } catch (ParseException ex) {
                         Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
                     }
