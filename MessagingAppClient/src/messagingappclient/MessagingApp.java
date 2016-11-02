@@ -7,10 +7,15 @@ package messagingappclient;
 
 import com.rabbitmq.client.*;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  *
@@ -22,7 +27,17 @@ public class MessagingApp {
     private Channel channel;
     private String queueName;
     private QueueingConsumer consumer;
-
+    
+    private final String SIGNUP = "signup";
+    private final String LOGIN = "login";
+    private final String CREATE_GROUP = "create_group";
+    private final String LEAVE_GROUP = "leave_group";
+    private final String ADD_FRIEND = "add_friend";
+    private final String GET_GROUP = "get_group";
+    
+    public boolean isLoggedIn;
+    public boolean isAnswered;
+    
     public MessagingApp() {
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost("localhost");
@@ -63,16 +78,6 @@ public class MessagingApp {
         connection.close();
     }
     
-    public void createQueue(String queueName) {
-        this.queueName = queueName;
-        try {
-            channel.queueDeclare(queueName, false, false, false, null);
-            channel.basicConsume(queueName, true, consumer);
-        } catch (IOException ex) {
-            Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
     public void listen(String queueName) {
         this.queueName = queueName;
         Consumer consume = new DefaultConsumer(channel) {
@@ -80,7 +85,7 @@ public class MessagingApp {
             public void handleDelivery(String consumerTag, Envelope envelope, 
                     AMQP.BasicProperties properties, byte[] body) throws IOException {
                 String message = new String(body, "UTF-8");
-                System.out.println("[x] Received '" + message + "'");
+                handleMessage(message);
             }
         };
         try {
@@ -90,5 +95,34 @@ public class MessagingApp {
         } catch (TimeoutException | IOException ex) {
             Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public void send(String message) {
+        isAnswered = false;
+        try {
+            channel.basicPublish("", SERVER_QUEUE_NAME, null, message.getBytes("UTF-8"));
+        } catch (IOException ex) {
+            Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public void handleMessage(String message) {
+        JSONParser parser = new JSONParser();
+        JSONObject jsonMessage = null;
+        try {
+            jsonMessage = (JSONObject) parser.parse(message);
+        } catch (ParseException ex) {
+            Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if(jsonMessage == null) {
+            System.out.println("Message is not on JSON.");
+        }
+        else {
+            System.out.println("[*] "+jsonMessage.get("message"));
+            if(jsonMessage.get("command").equals(LOGIN) || jsonMessage.get("command").equals(SIGNUP)) {
+                isLoggedIn = (Boolean)jsonMessage.get("status");
+            }
+        }
+        isAnswered = true;
     }
 }

@@ -30,57 +30,45 @@ public class MessagingAppServer {
     
     public static void main(String[] argv) {
         MessagingAppServer server = new MessagingAppServer();
+        ConnectionFactory factory = new ConnectionFactory();
         Connection connection = null;
-        Channel channel = null;
+        factory.setHost("localhost");
         JSONParser parser = new JSONParser();
         try {
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("localhost");
-
             connection = factory.newConnection();
-            channel = connection.createChannel();
-
+        } catch (IOException ex) {
+            Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (TimeoutException ex) {
+            Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            Channel channel = connection.createChannel();
             channel.queueDeclare(QUEUE_NAME, false, false, false, null);
+            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
 
-            channel.basicQos(1);
-
-            QueueingConsumer consumer = new QueueingConsumer(channel);
-            channel.basicConsume(QUEUE_NAME, false, consumer);
-
-            System.out.println(" [x] Awaiting requests");
-
-            while (true) {
-                String response = null;
-
-                QueueingConsumer.Delivery delivery = consumer.nextDelivery();
-
-                BasicProperties props = delivery.getProperties();
-                BasicProperties replyProps = new BasicProperties
-                                                .Builder()
-                                                .correlationId(props.getCorrelationId())
-                                                .build();
-
-                try {
-                    JSONObject message = (JSONObject)parser.parse(new String(delivery.getBody(),"UTF-8"));
-                    response = server.doCommand(message).toJSONString();
+            Consumer consumer = new DefaultConsumer(channel) {
+                @Override
+                public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) 
+                        throws IOException {
+                    String message = new String(body, "UTF-8");
+                    JSONParser parser = new JSONParser();
+                    JSONObject jsonMessage = null;
+                    try {
+                        jsonMessage = (JSONObject) parser.parse(message);
+                    } catch (ParseException ex) {
+                        Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    System.out.println("[x] Received '" + message + "'");
+                    try {
+                        channel.basicPublish("", jsonMessage.get("username").toString(), null, server.doCommand(jsonMessage).toJSONString().getBytes("UTF-8"));
+                    } catch (IOException ex) {
+                        Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
-                catch (UnsupportedEncodingException | ParseException e){
-                    System.out.println(" [.] " + e.toString());
-                    response = "";
-                }
-                finally {
-                    channel.basicPublish("", props.getReplyTo(), replyProps, response.getBytes("UTF-8"));
-                    channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
-                }
-            }
-        } catch(IOException | TimeoutException | InterruptedException | ShutdownSignalException | ConsumerCancelledException e) {
+            };
+            channel.basicConsume(QUEUE_NAME, true, consumer);
+        } catch(IOException | ShutdownSignalException | ConsumerCancelledException e) {
             e.printStackTrace();
-        } finally {
-            if (connection != null) {
-                try {
-                    connection.close();
-                } catch (Exception ignore) {}
-            }
         }
     }
     
