@@ -5,16 +5,10 @@
  */
 package messagingappclient;
 
-import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import java.util.Scanner;
 
-/**
- *
- * @author vanyadeasy
- */
+
 public class MessagingAppClient {
     public static void main(String[] argv) {
         MessagingApp client = new MessagingApp();
@@ -36,7 +30,7 @@ public class MessagingAppClient {
             
             String option = scanner.next();
             switch(option) {
-                
+         
             }
         }
         

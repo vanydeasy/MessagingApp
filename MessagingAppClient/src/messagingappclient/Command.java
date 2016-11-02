@@ -26,7 +26,7 @@ public class Command {
         JSONObject result = new JSONObject();
         result.put("command", "add_friend");
         result.put("username", username);
-        result.put("add", friend);
+        result.put("friend_name", friend);
         
         return result;
     }

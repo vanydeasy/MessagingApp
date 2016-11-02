@@ -188,4 +188,47 @@ public class DatabaseHelper {
         }
         return true;
     }
+    
+    public boolean isFriend(String username, String friendName) { 
+        boolean found = false;
+        if(!selectUser(friendName).isEmpty()) {
+            System.out.println("Your friend are not registered.");
+            return found;
+        }
+        String query = "SELECT friend_username FROM `friend` WHERE username = ?";
+        try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
+            dbStatement.setString(1, username);
+            ResultSet rs = dbStatement.executeQuery();
+            if(rs.next()) {
+                if (rs.equals(friendName)) {
+                    found = true;
+                }
+            }
+            dbStatement.close();   
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return found;
+    }
+    
+    public boolean addFriend(String username, String friendName) {
+        try {
+            if(isFriend(username, friendName)) {
+                System.out.println(friendName + "is already your friend.");
+                return false;
+            }
+            String query = "INSERT INTO `friend`(username, friend_username) VALUES(?,?)";
+            try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
+                dbStatement.setString(1, username);
+                dbStatement.setString(2, friendName);
+                dbStatement.executeUpdate();
+                dbStatement.close();
+                
+                System.out.println("Successfully added a friend");
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return true;
+    }
 }

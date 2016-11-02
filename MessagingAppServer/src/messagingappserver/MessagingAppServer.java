@@ -5,23 +5,19 @@
  */
 package messagingappserver;
 
+import java.util.logging.Logger;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import com.rabbitmq.client.*;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-/**
- *
- * @author vanyadeasy
- */
+
 public class MessagingAppServer {
     private static final String QUEUE_NAME = "server_queue";
     private final DatabaseHelper dbHelper = new DatabaseHelper();
@@ -29,6 +25,7 @@ public class MessagingAppServer {
     private final String LOGIN = "login";
     private final String CREATE_GROUP = "create_group";
     private final String LEAVE_GROUP = "leave_group";
+    private final String ADD_FRIEND = "add_friend";
     
     public static void main(String[] argv) {
         MessagingAppServer server = new MessagingAppServer();
@@ -155,6 +152,9 @@ public class MessagingAppServer {
                     response.put("message", "Failed.");
                 }
                 break;
+            case ADD_FRIEND:
+                username = request.get("username").toString();
+                String friendName = request.get("friend_name").toString();
             default:
                 response.put("status", false);
                 response.put("message", "Command is unrecognizable.");
