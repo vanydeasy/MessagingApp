@@ -28,7 +28,7 @@ public class MessagingApp {
     private static final String SERVER_QUEUE_NAME = "server_queue";
     private Connection connection = null;
     private Channel channel;
-    private String username;
+    private String queueName;
     private QueueingConsumer consumer;
 
     public MessagingApp() {
@@ -52,7 +52,7 @@ public class MessagingApp {
         AMQP.BasicProperties props = new AMQP.BasicProperties
                                     .Builder()
                                     .correlationId(corrId)
-                                    .replyTo(username)
+                                    .replyTo(queueName)
                                     .build();
 
         channel.basicPublish("", SERVER_QUEUE_NAME, props, message.getBytes("UTF-8"));
@@ -70,19 +70,9 @@ public class MessagingApp {
     public void close() throws Exception {
         connection.close();
     }
-
-    public JSONObject stringToJson(String input) {
-        JSONObject message = null;
-        try {
-            JSONParser parser = new JSONParser();
-            message = (JSONObject)parser.parse(input);
-        } catch (ParseException ex) {
-            Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return message;
-    }
     
     public void createQueue(String queueName) {
+        this.queueName = queueName;
         try {
             channel.queueDeclare(queueName, false, false, false, null);
             channel.basicConsume(queueName, true, consumer);
@@ -90,31 +80,4 @@ public class MessagingApp {
             Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    public JSONObject login() {
-        Scanner reader = new Scanner(System.in);  // Reading from System.in
-        
-        System.out.print("Do you want to login with an existing user?(Y/N) ");
-        String option = reader.next();
-        System.out.print("Username: ");
-        username = reader.next();
-        System.out.print("Password: ");
-        String password = reader.next();
-        
-        createQueue(username);
-        
-        String response = null;
-        try {
-            if(option.equals("Y")) {
-                response = call(Command.login(username, password).toJSONString());
-            }
-            else {
-                response = call(Command.signup(username, password).toJSONString());
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return stringToJson(response);
-    }
-    
 }

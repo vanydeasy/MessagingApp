@@ -193,18 +193,19 @@ public class DatabaseHelper {
     
     public boolean isFriend(String username, String friendName) { 
         boolean found = false;
-        if(!selectUser(friendName).isEmpty()) {
-            System.out.println("Your friend are not registered.");
+        if(selectUser(friendName).isEmpty()) {
+            System.out.println("Your friend is not registered.");
             return found;
         }
-        String query = "SELECT friend_username FROM `friend` WHERE username = ?";
+        String query = "SELECT username, friend_username FROM `friend` WHERE (username = ? AND friend_username = ?) OR (username = ? AND friend_username = ?)";
         try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
             dbStatement.setString(1, username);
+            dbStatement.setString(2, friendName);
+            dbStatement.setString(1, friendName);
+            dbStatement.setString(2, username);
             ResultSet rs = dbStatement.executeQuery();
             if(rs.next()) {
-                if (rs.equals(friendName)) {
-                    found = true;
-                }
+                found = true;
             }
             dbStatement.close();   
         } catch (SQLException ex) {
@@ -216,7 +217,7 @@ public class DatabaseHelper {
     public boolean addFriend(String username, String friendName) {
         try {
             if(isFriend(username, friendName)) {
-                System.out.println(friendName + "is already your friend.");
+                System.out.println(friendName + " is already your friend.");
                 return false;
             }
             String query = "INSERT INTO `friend`(username, friend_username) VALUES(?,?)";
@@ -234,7 +235,7 @@ public class DatabaseHelper {
         return true;
     }
     
-    public boolean addNewGroup(String groupName, String username, JSONArray members) {
+    public boolean addGroupMember(String groupName, String username, JSONArray members) {
         int groupId = 0;
         JSONArray groups = new JSONArray();
         groups = selectGroupByUser(username);

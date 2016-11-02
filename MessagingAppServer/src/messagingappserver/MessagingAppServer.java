@@ -156,7 +156,35 @@ public class MessagingAppServer {
             case ADD_FRIEND:
                 username = request.get("username").toString();
                 String friendName = request.get("friend_name").toString();
+                if(dbHelper.addFriend(username, friendName)) {
+                    response.put("status", true);
+                    response.put("message", "A friend has been added.");
+                }
+                else {
+                    response.put("status", false);
+                    response.put("message", "A friend cannot be added");
+                }
+                break;
             case ADD_GROUP_MEMBER:
+                username = request.get("username").toString();
+                String group = request.get("group_name").toString();
+                JSONParser parse = new JSONParser();
+                JSONArray member = null;
+                {
+                    try {
+                        member = (JSONArray)parse.parse(request.get("members").toString());
+                    } catch (ParseException ex) {
+                        Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                if(dbHelper.addGroupMember(group, username, member)) {
+                    response.put("status", true);
+                    response.put("message", "Successfully added new member(s).");
+                }
+                else {
+                    response.put("status", false);
+                    response.put("message", "Failed.");
+                }
                 break;
             default:
                 response.put("status", false);
