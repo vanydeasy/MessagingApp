@@ -7,17 +7,28 @@ package messagingappserver;
 
 import com.rabbitmq.client.*;
 import com.rabbitmq.client.AMQP.BasicProperties;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 /**
  *
  * @author vanyadeasy
  */
 public class MessagingAppServer {
-    private static final String QUEUE_NAME = "messaging_app";
-    private DatabaseHelper dbHelper = new DatabaseHelper();
+    private static final String QUEUE_NAME = "server_queue";
+    private final DatabaseHelper dbHelper = new DatabaseHelper();
+    private final String SIGNUP = "signup";
+    private final String LOGIN = "login";
+    private final String CREATE_GROUP = "create_group";
+    private final String LEAVE_GROUP = "leave_group";
     
     public static void main(String[] argv) {
         MessagingAppServer server = new MessagingAppServer();
@@ -55,17 +66,16 @@ public class MessagingAppServer {
                     JSONObject message = (JSONObject)parser.parse(new String(delivery.getBody(),"UTF-8"));
                     response = server.doCommand(message).toJSONString();
                 }
-                catch (Exception e){
+                catch (UnsupportedEncodingException | ParseException e){
                     System.out.println(" [.] " + e.toString());
                     response = "";
                 }
                 finally {
-                    channel.basicPublish( "", props.getReplyTo(), replyProps, response.getBytes("UTF-8"));
-
+                    channel.basicPublish("", props.getReplyTo(), replyProps, response.getBytes("UTF-8"));
                     channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
                 }
             }
-        } catch(Exception e) {
+        } catch(IOException | TimeoutException | InterruptedException | ShutdownSignalException | ConsumerCancelledException e) {
             e.printStackTrace();
         } finally {
             if (connection != null) {
@@ -81,9 +91,9 @@ public class MessagingAppServer {
         response.put("command", request.get("command"));
         String command = request.get("command").toString();        
         System.out.println(">> Command: "+command);
-        String username = new String();
+        String username = null;
         switch(command) {
-            case "signup":
+            case SIGNUP:
                 username = request.get("username").toString();
                 String password = request.get("password").toString();
                 if(dbHelper.insertUser(username,password)) {
@@ -95,7 +105,7 @@ public class MessagingAppServer {
                     response.put("message", "Username already exists.");
                 }
                 break;
-            case "login":
+            case LOGIN:
                 username = request.get("username").toString();
                 String pw = request.get("password").toString();
                 JSONObject user = dbHelper.selectUser(username);
@@ -112,7 +122,7 @@ public class MessagingAppServer {
                     response.put("message", "You are not registered!");
                 }
                 break;
-            case "leave_group":
+            case LEAVE_GROUP:
                 int groupId = Integer.parseInt(request.get("group_id").toString());
                 username = request.get("username").toString();
                 if(dbHelper.removeGroupMember(groupId, username)) {
@@ -124,20 +134,30 @@ public class MessagingAppServer {
                     response.put("message", "Failed.");
                 }
                 break;
-            case "create_group":
+            case CREATE_GROUP:
                 username = request.get("username").toString();
                 String groupName = request.get("group_name").toString();
-                /*JSONArray members = request.get("members");
+                JSONParser parser = new JSONParser();
+                JSONArray members = null;
+                {
+                    try {
+                        members = (JSONArray)parser.parse(request.get("member").toString());
+                    } catch (ParseException ex) {
+                        Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
                 if(dbHelper.createNewGroup(groupName, username, members)) {
                     response.put("status", true);
-                    response.put("message", " You left the group.");
+                    response.put("message", "The group has been created.");
                 }
                 else {
                     response.put("status", false);
                     response.put("message", "Failed.");
-                }*/
+                }
                 break;
             default:
+                response.put("status", false);
+                response.put("message", "Command is unrecognizable.");
                 break;
         }
         
