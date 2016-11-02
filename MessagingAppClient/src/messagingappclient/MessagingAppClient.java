@@ -36,6 +36,8 @@ public class MessagingAppClient {
         System.out.println("3. Create new group");
         System.out.println("4. Leave group");
         System.out.println("5. Add new friend");
+        System.out.println("6. Get groups");
+        System.out.println("7. Get friends");
         System.out.println("6. Exit");
         do {
             System.out.print("[] "); option = scanner.nextInt();
@@ -79,9 +81,11 @@ public class MessagingAppClient {
                             String friend = reader.next();
                             QUEUE_HANDLER.send(Command.addFriend(username, friend).toJSONString());
                             break;
-                        case 6: // Get group
+                        case 6: // Get groups
                             QUEUE_HANDLER.send(Command.getGroup(username).toJSONString());
                             break;
+                        case 7: // Get friends
+                            QUEUE_HANDLER.send(Command.geFriend(username).toJSONString());
                         default:
                             System.out.println("Command is unrecognizable. Try again.");
                             break;
@@ -89,7 +93,7 @@ public class MessagingAppClient {
                 }
             }
             while(!QUEUE_HANDLER.isAnswered) {System.out.print("");}
-        } while(option != 6);
+        } while(option < 7);
         try {
             QUEUE_HANDLER.close();
         } catch (Exception ex) {
