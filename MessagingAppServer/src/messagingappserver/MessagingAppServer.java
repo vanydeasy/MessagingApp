@@ -26,6 +26,7 @@ public class MessagingAppServer {
     private final String CREATE_GROUP = "create_group";
     private final String LEAVE_GROUP = "leave_group";
     private final String ADD_FRIEND = "add_friend";
+    private final String ADD_GROUP_MEMBER = "add_member";
     
     public static void main(String[] argv) {
         MessagingAppServer server = new MessagingAppServer();
@@ -155,6 +156,8 @@ public class MessagingAppServer {
             case ADD_FRIEND:
                 username = request.get("username").toString();
                 String friendName = request.get("friend_name").toString();
+            case ADD_GROUP_MEMBER:
+                break;
             default:
                 response.put("status", false);
                 response.put("message", "Command is unrecognizable.");
