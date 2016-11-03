@@ -14,11 +14,8 @@ import org.json.simple.JSONArray;
 public class MessagingAppClient {
     private static final MessagingApp QUEUE_HANDLER = new MessagingApp();
     private static String username;
-    private static boolean isLoggedIn = false;
-    private static boolean flag = false;
     
     public static void main(String[] argv) {
-        JSONObject response = null;
         Scanner scanner = new Scanner(System.in);
         
         // Command
@@ -38,6 +35,7 @@ public class MessagingAppClient {
             System.out.print("[] "); option = scanner.nextInt();
             if(option == 0) {
                 login();
+                while(!QUEUE_HANDLER.isAnswered) {System.out.print("");}
             }
             else {
                 if(!QUEUE_HANDLER.isLoggedIn) {
@@ -61,7 +59,7 @@ public class MessagingAppClient {
                             break;
                         case 3: // Create new group
                             System.out.print("Insert group name: ");
-                            String groupname = reader.next();
+                            String groupname = reader.nextLine();
                             System.out.print("Do you want to add other members to the group?(Y/N) ");
                             JSONArray members = new JSONArray();
                             if(reader.next().equals("Y")) {
@@ -99,7 +97,6 @@ public class MessagingAppClient {
                     while(!QUEUE_HANDLER.isAnswered) {System.out.print("");}
                 }
             }
-            while(!QUEUE_HANDLER.isAnswered) {System.out.print("");}
         } while(option < 9);
         try {
             QUEUE_HANDLER.close();
@@ -131,7 +128,7 @@ public class MessagingAppClient {
     public static void addGroupMember() {
         Scanner reader = new Scanner(System.in);
         JSONArray friends = new JSONArray();
-        String name = "";
+        String name;
         System.out.print("Enter group name: ");
         String groupName = reader.next();
         System.out.print("Friend's name (type \"quit\" to stop): ");

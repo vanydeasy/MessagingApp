@@ -9,9 +9,7 @@ import java.util.logging.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import com.rabbitmq.client.*;
-import com.rabbitmq.client.AMQP.BasicProperties;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import org.json.simple.parser.JSONParser;
@@ -42,9 +40,7 @@ public class MessagingAppServer {
         JSONParser parser = new JSONParser();
         try {
             connection = factory.newConnection();
-        } catch (IOException ex) {
-            Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (TimeoutException ex) {
+        } catch (IOException | TimeoutException ex) {
             Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
@@ -83,7 +79,7 @@ public class MessagingAppServer {
         response.put("command", request.get("command"));
         String command = request.get("command").toString();        
         System.out.println("[!] Command: "+command);
-        String username = null;
+        String username;
         switch(command) {
             case SIGNUP:
                 username = request.get("username").toString();
@@ -192,7 +188,7 @@ public class MessagingAppServer {
                 JSONArray groups = dbHelper.selectGroupByUser(username);
                 response.put("status", true);
                 response.put("groups", groups);
-                if(groups.size()==0)
+                if(groups.isEmpty())
                     response.put("message", "User does not join on any groups.");
                 else
                     response.put("message", "Groups have been received.");
@@ -278,7 +274,7 @@ public class MessagingAppServer {
                 JSONArray friends = dbHelper.getFriendsByUser(username);
                 response.put("status", true);
                 response.put("friends", friends);
-                if(friends.size()==0) {
+                if(friends.isEmpty()) {
                     response.put("message", "User does not have any friend.");
                 } else {
                     response.put("message", "Friends List have been received.");

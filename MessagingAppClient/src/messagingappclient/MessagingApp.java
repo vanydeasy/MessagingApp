@@ -46,9 +46,7 @@ public class MessagingApp {
             connection = factory.newConnection();
             channel = connection.createChannel();
             consumer = new QueueingConsumer(channel);
-        } catch (IOException ex) {
-            Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (TimeoutException ex) {
+        } catch (IOException | TimeoutException ex) {
             Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
