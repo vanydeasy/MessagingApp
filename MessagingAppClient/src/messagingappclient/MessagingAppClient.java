@@ -35,6 +35,7 @@ public class MessagingAppClient {
             System.out.print("[] "); option = scanner.nextInt();
             if(option == 0) {
                 login();
+                while(!QUEUE_HANDLER.isAnswered) {System.out.print("");}
             }
             else {
                 if(!QUEUE_HANDLER.isLoggedIn) {
@@ -58,7 +59,7 @@ public class MessagingAppClient {
                             break;
                         case 3: // Create new group
                             System.out.print("Insert group name: ");
-                            String groupname = reader.next();
+                            String groupname = reader.nextLine();
                             System.out.print("Do you want to add other members to the group?(Y/N) ");
                             JSONArray members = new JSONArray();
                             if(reader.next().equals("Y")) {
@@ -72,9 +73,9 @@ public class MessagingAppClient {
                             QUEUE_HANDLER.send(Command.createGroup(username, groupname, members).toJSONString());
                             break;
                         case 4: // Leave group
-                            System.out.print("No. group: ");
-                            Integer groupId = reader.nextInt();
-                            QUEUE_HANDLER.send(Command.leaveGroup(groupId, username).toJSONString());
+                            System.out.print("Group name: ");
+                            String name = reader.nextLine();
+                            QUEUE_HANDLER.send(Command.leaveGroup(name, username).toJSONString());
                             break;
                         case 5: // Add new friend
                             System.out.print("Add by username: ");
@@ -96,7 +97,6 @@ public class MessagingAppClient {
                     while(!QUEUE_HANDLER.isAnswered) {System.out.print("");}
                 }
             }
-            while(!QUEUE_HANDLER.isAnswered) {System.out.print("");}
         } while(option < 9);
         try {
             QUEUE_HANDLER.close();

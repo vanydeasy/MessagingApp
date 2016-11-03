@@ -41,10 +41,10 @@ public class Command {
         return result;
     }
     
-    public static JSONObject leaveGroup(int groupId, String username) {
+    public static JSONObject leaveGroup(String groupName, String username) {
         JSONObject result = new JSONObject();
         result.put("command", "leave_group");
-        result.put("group_id", groupId);
+        result.put("group_name", groupName);
         result.put("username", username);
         
         return result;

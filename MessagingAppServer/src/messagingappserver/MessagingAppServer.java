@@ -111,15 +111,35 @@ public class MessagingAppServer {
                 }
                 break;
             case LEAVE_GROUP:
-                int groupId = Integer.parseInt(request.get("group_id").toString());
+                String group_name = request.get("group_name").toString();
                 username = request.get("username").toString();
-                if(dbHelper.removeGroupMember(groupId, username)) {
-                    response.put("status", true);
-                    response.put("message", " You left the group.");
-                }
-                else {
+                JSONArray groupList = dbHelper.selectGroupByUser(username);
+                if(groupList.size()==0) {
                     response.put("status", false);
-                    response.put("message", "Failed.");
+                    response.put("message", "User does not join on any groups.");
+                } else {
+                    int group_id = 0;
+                    for (int i=0; i<groupList.size(); i++) {
+                        JSONParser parse = new JSONParser();
+                        JSONObject temp = new JSONObject();
+                        try {
+                            temp = (JSONObject)parse.parse(groupList.get(i).toString());
+                        } catch (ParseException ex) {
+                            Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        if (temp.get("name").equals(group_name)) {
+                            group_id = Integer.parseInt(temp.get("group_id").toString());
+                            break;
+                        }
+                    }
+                    if(dbHelper.removeGroupMember(group_id, username)) {
+                        response.put("status", true);
+                        response.put("message", " You left the group.");
+                    }
+                    else {
+                        response.put("status", false);
+                        response.put("message", "Failed.");
+                    }
                 }
                 break;
             case CREATE_GROUP:
