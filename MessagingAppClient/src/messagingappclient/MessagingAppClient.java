@@ -75,9 +75,9 @@ public class MessagingAppClient {
                             QUEUE_HANDLER.send(Command.createGroup(username, groupname, members).toJSONString());
                             break;
                         case 4: // Leave group
-                            System.out.print("No. group: ");
-                            Integer groupId = reader.nextInt();
-                            QUEUE_HANDLER.send(Command.leaveGroup(Integer.valueOf(groupId), username).toJSONString());
+                            System.out.print("Group name: ");
+                            String name = reader.nextLine();
+                            QUEUE_HANDLER.send(Command.leaveGroup(name, username).toJSONString());
                             break;
                         case 5: // Add new friend
                             System.out.print("Add by username: ");

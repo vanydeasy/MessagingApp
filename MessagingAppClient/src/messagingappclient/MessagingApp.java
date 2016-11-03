@@ -139,7 +139,6 @@ public class MessagingApp {
                     }
                     System.out.println(temp.get("group_id").toString() + "\t" +temp.get("name").toString());
                 }
-                System.out.println();
             } else if (jsonMessage.get("command").equals(GET_FRIEND)) {
                 JSONArray friends = new JSONArray();
                 try {
@@ -151,8 +150,8 @@ public class MessagingApp {
                 for (int i=0; i<friends.size(); i++) {
                     System.out.println(i+1 +"\t" +friends.get(i).toString());
                 }
-                System.out.println();
             }
+            System.out.println();
         }
         isAnswered = true;
     }
