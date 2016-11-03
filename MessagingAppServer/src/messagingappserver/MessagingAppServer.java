@@ -168,19 +168,24 @@ public class MessagingAppServer {
             case ADD_FRIEND:
                 username = request.get("username").toString();
                 String friendName = request.get("friend_name").toString();
-                if(dbHelper.addFriend(username, friendName)) {
-                    response.put("status", true);
-                    response.put("message", username+" added you as a friend.");
-                    try {
-                        channel.basicPublish("", friendName, null, response.toJSONString().getBytes("UTF-8"));
-                    } catch (IOException ex) {
-                        Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    response.put("message", "A friend has been added.");
-                }
-                else {
+                JSONObject userdetail = dbHelper.selectUser(friendName);
+                if (userdetail.isEmpty()) {
                     response.put("status", false);
-                    response.put("message", "A friend cannot be added");
+                    response.put("message", friendName+" is not registered");
+                } else {
+                    if(dbHelper.addFriend(username, friendName)) {
+                        response.put("status", true);
+                        response.put("message", username+" added you as a friend.");
+                        try {
+                            channel.basicPublish("", friendName, null, response.toJSONString().getBytes("UTF-8"));
+                        } catch (IOException ex) {
+                            Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                    else {
+                        response.put("status", false);
+                        response.put("message", friendName +" is already your friend");
+                    }
                 }
                 break;
             case GET_GROUP:
@@ -233,16 +238,21 @@ public class MessagingAppServer {
                             break;
                         }
                     }
-                    JSONArray users = dbHelper.selectUserOnGroup(id);
-                    for (int j=0; j<users.size(); j++) {
-                        try {
-                            channel.basicPublish("", users.get(j).toString(), null, request.toJSONString().getBytes("UTF-8"));
-                        } catch (Exception ex) {
-                            Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+                    if (id == 0) {
+                        response.put("status", true);
+                        response.put("message", "You are not member of this group.");
+                    } else {
+                        JSONArray users = dbHelper.selectUserOnGroup(id);
+                        for (int j=0; j<users.size(); j++) {
+                            try {
+                                channel.basicPublish("", users.get(j).toString(), null, request.toJSONString().getBytes("UTF-8"));
+                            } catch (Exception ex) {
+                                Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+                            }
                         }
+                        response.put("status", true);
+                        response.put("message", "Your message has been sent.");
                     }
-                    response.put("status", true);
-                    response.put("message", "Your message has been sent.");
                 } else {
                     response.put("status", false);
                     response.put("message", "Your message cannot be sent.");
