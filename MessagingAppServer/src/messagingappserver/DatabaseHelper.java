@@ -201,8 +201,8 @@ public class DatabaseHelper {
         try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
             dbStatement.setString(1, username);
             dbStatement.setString(2, friendName);
-            dbStatement.setString(1, friendName);
-            dbStatement.setString(2, username);
+            dbStatement.setString(3, friendName);
+            dbStatement.setString(4, username);
             ResultSet rs = dbStatement.executeQuery();
             if(rs.next()) {
                 found = true;
@@ -228,6 +228,54 @@ public class DatabaseHelper {
                 dbStatement.close();
                 
                 System.out.println("Successfully added a friend");
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return true;
+    }
+    
+    public boolean insertPersonalMessage (String username, String friend, String message) {
+        try {
+            String query = "INSERT INTO `personal_message` (sent_by, sent_to, content) VALUES(?, ?, ?)";
+            try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
+                dbStatement.setString(1, username);
+                dbStatement.setString(2, friend);
+                dbStatement.setString(3, message);
+                dbStatement.executeUpdate();
+                dbStatement.close();
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return true;
+    }
+    
+    public boolean insertGroupMessage (String username, String group, String message) {
+        int groupId = 0;
+        JSONArray groups = new JSONArray();
+        groups = selectGroupByUser(username);
+        JSONParser parser = new JSONParser();
+        JSONObject temp = new JSONObject();
+        for (int i=0; i<groups.size(); i++) {
+            try {
+                temp = (JSONObject)parser.parse(groups.get(i).toString());
+            } catch (ParseException ex) {
+                Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            if (temp.get("name").equals(group)) {
+                groupId = Integer.parseInt(temp.get("group_id").toString());
+                break;
+            }
+        }
+        try {
+            String query = "INSERT INTO `group_message` (group_id, sent_by, content) VALUES(?, ?, ?)";
+            try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
+                dbStatement.setInt(1, groupId);
+                dbStatement.setString(2, username);
+                dbStatement.setString(3, message);
+                dbStatement.executeUpdate();
+                dbStatement.close();
             }
         } catch (SQLException ex) {
             Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
@@ -267,5 +315,23 @@ public class DatabaseHelper {
             Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
         }
         return true;
+    }
+    
+    public JSONArray getFriendsByUser(String username) {
+        JSONArray friends = new JSONArray();
+        try {
+            String query = "SELECT friend_username FROM `friend` NATURAL JOIN `user` WHERE username = ?";
+            try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
+                dbStatement.setString(1, username);
+                ResultSet rs = dbStatement.executeQuery();
+                while(rs.next()) {
+                    friends.add(rs.getString("friend_username"));
+                }
+                dbStatement.close();
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return friends;
     }
 }

@@ -84,4 +84,24 @@ public class Command {
         
         return result;
     }
+    
+    public static JSONObject chatFriend(String username, String friendName, String content) {
+        JSONObject result = new JSONObject();
+        result.put("command", "chat_friend");
+        result.put("username", username);
+        result.put("friend_name", friendName);
+        result.put("message", content);
+        
+        return result;
+    }
+    
+    public static JSONObject chatGroup(String username, String groupName, String content) {
+        JSONObject result = new JSONObject();
+        result.put("command", "chat_group");
+        result.put("username", username);
+        result.put("group_name", groupName);
+        result.put("message", content);
+        
+        return result;
+    }
 }

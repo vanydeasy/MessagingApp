@@ -27,12 +27,17 @@ public class MessagingAppServer {
     private final String LEAVE_GROUP = "leave_group";
     private final String ADD_FRIEND = "add_friend";
     private final String GET_GROUP = "get_group";
+    private final String GET_FRIEND = "get_friend";
     private final String ADD_GROUP_MEMBER = "add_member";
+    private final String CHAT_FRIEND = "chat_friend";
+    private final String CHAT_GROUP = "chat_group";
     
+    private static Channel channel;
     public static void main(String[] argv) {
         MessagingAppServer server = new MessagingAppServer();
         ConnectionFactory factory = new ConnectionFactory();
         Connection connection = null;
+        
         factory.setHost("localhost");
         JSONParser parser = new JSONParser();
         try {
@@ -43,7 +48,7 @@ public class MessagingAppServer {
             Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
-            Channel channel = connection.createChannel();
+            channel = connection.createChannel();
             channel.queueDeclare(QUEUE_NAME, false, false, false, null);
             System.out.println("[*] Waiting for messages. To exit press CTRL+C");
 
@@ -147,6 +152,12 @@ public class MessagingAppServer {
                 String friendName = request.get("friend_name").toString();
                 if(dbHelper.addFriend(username, friendName)) {
                     response.put("status", true);
+                    response.put("message", username+" added you as a friend.");
+                    try {
+                        channel.basicPublish("", friendName, null, response.toJSONString().getBytes("UTF-8"));
+                    } catch (IOException ex) {
+                        Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                     response.put("message", "A friend has been added.");
                 }
                 else {
@@ -163,6 +174,61 @@ public class MessagingAppServer {
                     response.put("message", "User does not join on any groups.");
                 else
                     response.put("message", "Groups have been received.");
+                break;
+            case CHAT_FRIEND:
+                username = request.get("username").toString();
+                String friend = request.get("friend_name").toString();
+                String message = request.get("message").toString();
+                if (!dbHelper.isFriend(username, friend)) {
+                    response.put("status", false);
+                    response.put("message", "You are not friends yet.");
+                } else {
+                    if (dbHelper.insertPersonalMessage(username, friend, message)) {
+                        try {
+                            channel.basicPublish("", friend, null, request.toJSONString().getBytes("UTF-8"));
+                            channel.basicPublish("", username, null, request.toJSONString().getBytes("UTF-8"));
+                        } catch (IOException ex) {
+                            Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        response.put("status", true);
+                        response.put("message", "Your message has been sent.");
+                    }
+                }
+                break;
+            case CHAT_GROUP:
+                username = request.get("username").toString();
+                String groupname = request.get("group_name").toString();
+                String content = request.get("message").toString();
+                JSONArray user_groups = dbHelper.selectGroupByUser(username);
+                if (user_groups.size()>0) {
+                    int id = 0;
+                    for (int i=0; i<user_groups.size(); i++) {
+                        JSONParser parse = new JSONParser();
+                        JSONObject temp = new JSONObject();
+                        try {
+                            temp = (JSONObject)parse.parse(user_groups.get(i).toString());
+                        } catch (ParseException ex) {
+                            Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                        if (temp.get("name").equals(groupname)) {
+                            id = Integer.parseInt(temp.get("group_id").toString());
+                            break;
+                        }
+                    }
+                    JSONArray users = dbHelper.selectUserOnGroup(id);
+                    for (int j=0; j<users.size(); j++) {
+                        try {
+                            channel.basicPublish("", users.get(j).toString(), null, request.toJSONString().getBytes("UTF-8"));
+                        } catch (Exception ex) {
+                            Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+                    }
+                    response.put("status", true);
+                    response.put("message", "Your message has been sent.");
+                } else {
+                    response.put("status", false);
+                    response.put("message", "Your message cannot be sent.");
+                }
                 break;
             case ADD_GROUP_MEMBER:
                 username = request.get("username").toString();
@@ -183,6 +249,17 @@ public class MessagingAppServer {
                 else {
                     response.put("status", false);
                     response.put("message", "Failed.");
+                }
+                break;
+            case GET_FRIEND:
+                username = request.get("username").toString();
+                JSONArray friends = dbHelper.getFriendsByUser(username);
+                response.put("status", true);
+                response.put("friends", friends);
+                if(friends.size()==0) {
+                    response.put("message", "User does not have any friend.");
+                } else {
+                    response.put("message", "Friends List have been received.");
                 }
                 break;
             default:

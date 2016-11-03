@@ -30,9 +30,10 @@ public class MessagingAppClient {
         System.out.println("3. Create new group");
         System.out.println("4. Leave group");
         System.out.println("5. Add new friend");
-        System.out.println("6. Get groups");
-        System.out.println("7. Get friends");
-        System.out.println("6. Exit");
+        System.out.println("6. Add new group member");
+        System.out.println("7. Get groups");
+        System.out.println("8. Get friends");
+        System.out.println("9. Exit");
         do {
             System.out.print("[] "); option = scanner.nextInt();
             if(option == 0) {
@@ -45,14 +46,22 @@ public class MessagingAppClient {
                 else {
                     switch(option) {
                         case 1: // Send message to friend
-                            
+                            System.out.print("Insert your friend's username: ");
+                            String friend = reader.nextLine();
+                            System.out.print("Type the message: ");
+                            String message = reader.nextLine();
+                            QUEUE_HANDLER.send(Command.chatFriend(username, friend, message).toJSONString());
                             break;
                         case 2: // Send message to group
-
+                            System.out.print("Insert group name: ");
+                            String groupName = reader.nextLine();
+                            System.out.print("Type the message: ");
+                            String content = reader.nextLine();
+                            QUEUE_HANDLER.send(Command.chatGroup(username, groupName, content).toJSONString());
                             break;
                         case 3: // Create new group
                             System.out.print("Insert group name: ");
-                            String groupName = reader.next();
+                            String groupname = reader.next();
                             System.out.print("Do you want to add other members to the group?(Y/N) ");
                             JSONArray members = new JSONArray();
                             if(reader.next().equals("Y")) {
@@ -63,7 +72,7 @@ public class MessagingAppClient {
                                     members.add(input);
                                 }
                             }
-                            QUEUE_HANDLER.send(Command.createGroup(username, groupName, members).toJSONString());
+                            QUEUE_HANDLER.send(Command.createGroup(username, groupname, members).toJSONString());
                             break;
                         case 4: // Leave group
                             System.out.print("No. group: ");
@@ -72,13 +81,15 @@ public class MessagingAppClient {
                             break;
                         case 5: // Add new friend
                             System.out.print("Add by username: ");
-                            String friend = reader.next();
-                            QUEUE_HANDLER.send(Command.addFriend(username, friend).toJSONString());
+                            String friendName = reader.next();
+                            QUEUE_HANDLER.send(Command.addFriend(username, friendName).toJSONString());
                             break;
-                        case 6: // Get groups
+                        case 6:
+                            addGroupMember();
+                        case 7: // Get groups
                             QUEUE_HANDLER.send(Command.getGroup(username).toJSONString());
                             break;
-                        case 7: // Get friends
+                        case 8: // Get friends
                             QUEUE_HANDLER.send(Command.getFriend(username).toJSONString());
                         default:
                             System.out.println("Command is unrecognizable. Try again.");
@@ -87,7 +98,7 @@ public class MessagingAppClient {
                 }
             }
             while(!QUEUE_HANDLER.isAnswered) {System.out.print("");}
-        } while(option < 7);
+        } while(option < 9);
         try {
             QUEUE_HANDLER.close();
         } catch (Exception ex) {
@@ -119,17 +130,14 @@ public class MessagingAppClient {
         Scanner reader = new Scanner(System.in);
         JSONArray friends = new JSONArray();
         String name = "";
-        
-        System.out.print("Friend's name (type \"end\" to stop): ");
-        name = reader.next();
-        while (!name.equals("end")) {
-            friends.add(name);
-            System.out.print("Friend's name (type \"end\" to stop): ");
-            name = reader.next();
-        }
-        
         System.out.print("Enter group name: ");
         String groupName = reader.next();
+        System.out.print("Friend's name (type \"quit\" to stop): ");
+        name = reader.next();
+        while (!name.equals("quit")) {
+            friends.add(name);
+            name = reader.next();
+        }
         QUEUE_HANDLER.send(Command.addGroupMember(username, groupName, friends).toJSONString());
     }
 }

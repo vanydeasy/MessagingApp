@@ -34,6 +34,7 @@ public class MessagingApp {
     private final String LEAVE_GROUP = "leave_group";
     private final String ADD_FRIEND = "add_friend";
     private final String GET_GROUP = "get_group";
+    private final String GET_FRIEND = "get_friend";
     
     public boolean isLoggedIn;
     public boolean isAnswered;
@@ -89,10 +90,10 @@ public class MessagingApp {
             }
         };
         try {
-            channel.close();
             channel = connection.createChannel();
+            channel.queueDeclare(queueName, false, false, false, null);
             channel.basicConsume(queueName, true, consume);
-        } catch (TimeoutException | IOException ex) {
+        } catch (IOException ex) {
             Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -121,6 +122,36 @@ public class MessagingApp {
             System.out.println("[*] "+jsonMessage.get("message"));
             if(jsonMessage.get("command").equals(LOGIN) || jsonMessage.get("command").equals(SIGNUP)) {
                 isLoggedIn = (Boolean)jsonMessage.get("status");
+            } else if (jsonMessage.get("command").equals(GET_GROUP)) {
+                JSONArray groups = new JSONArray();
+                try {
+                    groups = (JSONArray) parser.parse(jsonMessage.get("groups").toString());
+                } catch (ParseException ex) {
+                    Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                JSONObject temp = new JSONObject();
+                System.out.println("\nID\tName");
+                for (int i=0; i<groups.size(); i++) {
+                    try {
+                        temp = (JSONObject) parser.parse(groups.get(i).toString());
+                    } catch (ParseException ex) {
+                        Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    System.out.println(temp.get("group_id").toString() + "\t" +temp.get("name").toString());
+                }
+                System.out.println();
+            } else if (jsonMessage.get("command").equals(GET_FRIEND)) {
+                JSONArray friends = new JSONArray();
+                try {
+                    friends = (JSONArray) parser.parse(jsonMessage.get("friends").toString());
+                } catch (ParseException ex) {
+                    Logger.getLogger(MessagingApp.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                System.out.println("\nNo.\tName");
+                for (int i=0; i<friends.size(); i++) {
+                    System.out.println(i+1 +"\t" +friends.get(i).toString());
+                }
+                System.out.println();
             }
         }
         isAnswered = true;
