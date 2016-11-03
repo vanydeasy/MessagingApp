@@ -91,10 +91,12 @@ public class MessagingAppClient {
                             break;
                         case 8: // Get friends
                             QUEUE_HANDLER.send(Command.getFriend(username).toJSONString());
+                            break;
                         default:
                             System.out.println("Command is unrecognizable. Try again.");
                             break;
                     }
+                    while(!QUEUE_HANDLER.isAnswered) {System.out.print("");}
                 }
             }
             while(!QUEUE_HANDLER.isAnswered) {System.out.print("");}
