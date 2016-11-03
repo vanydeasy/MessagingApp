@@ -14,11 +14,8 @@ import org.json.simple.JSONArray;
 public class MessagingAppClient {
     private static final MessagingApp QUEUE_HANDLER = new MessagingApp();
     private static String username;
-    private static boolean isLoggedIn = false;
-    private static boolean flag = false;
     
     public static void main(String[] argv) {
-        JSONObject response = null;
         Scanner scanner = new Scanner(System.in);
         
         // Command
@@ -77,7 +74,7 @@ public class MessagingAppClient {
                         case 4: // Leave group
                             System.out.print("No. group: ");
                             Integer groupId = reader.nextInt();
-                            QUEUE_HANDLER.send(Command.leaveGroup(Integer.valueOf(groupId), username).toJSONString());
+                            QUEUE_HANDLER.send(Command.leaveGroup(groupId, username).toJSONString());
                             break;
                         case 5: // Add new friend
                             System.out.print("Add by username: ");
@@ -131,7 +128,7 @@ public class MessagingAppClient {
     public static void addGroupMember() {
         Scanner reader = new Scanner(System.in);
         JSONArray friends = new JSONArray();
-        String name = "";
+        String name;
         System.out.print("Enter group name: ");
         String groupName = reader.next();
         System.out.print("Friend's name (type \"quit\" to stop): ");

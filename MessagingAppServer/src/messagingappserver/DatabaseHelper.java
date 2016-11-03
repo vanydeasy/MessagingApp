@@ -253,8 +253,7 @@ public class DatabaseHelper {
     
     public boolean insertGroupMessage (String username, String group, String message) {
         int groupId = 0;
-        JSONArray groups = new JSONArray();
-        groups = selectGroupByUser(username);
+        JSONArray groups = selectGroupByUser(username);
         JSONParser parser = new JSONParser();
         JSONObject temp = new JSONObject();
         for (int i=0; i<groups.size(); i++) {
@@ -285,8 +284,7 @@ public class DatabaseHelper {
     
     public boolean addGroupMember(String groupName, String username, JSONArray members) {
         int groupId = 0;
-        JSONArray groups = new JSONArray();
-        groups = selectGroupByUser(username);
+        JSONArray groups = selectGroupByUser(username);
         JSONParser parser = new JSONParser();
         JSONObject temp = new JSONObject();
         for (int i=0; i<groups.size(); i++) {
