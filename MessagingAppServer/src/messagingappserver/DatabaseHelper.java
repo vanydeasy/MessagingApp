@@ -128,9 +128,10 @@ public class DatabaseHelper {
                 //System.out.println("haha");
                 return false;
             }
-            String query = "DELETE FROM `group_member` WHERE username = ?";
+            String query = "DELETE FROM `group_member` WHERE group_id = ? AND username = ? ";
             try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
-                dbStatement.setString(1, username);
+                dbStatement.setInt(1, groupId);
+                dbStatement.setString(2, username);
                 dbStatement.executeUpdate();
                 dbStatement.close();
                 
@@ -177,10 +178,13 @@ public class DatabaseHelper {
             dbStatement.executeUpdate();
             
             for (int i=0; i<members.size(); i++) {
-                dbStatement.setInt(1, groupId);
-                dbStatement.setString(2, members.get(i).toString());
-                dbStatement.setInt(3, 0);
-                dbStatement.executeUpdate();
+                JSONObject user = selectUser(members.get(i).toString());
+                if (!user.isEmpty() && isFriend(username, members.get(i).toString())) {
+                    dbStatement.setInt(1, groupId);
+                    dbStatement.setString(2, members.get(i).toString());
+                    dbStatement.setInt(3, 0);
+                    dbStatement.executeUpdate();
+                }
             }
             dbStatement.close();
 
@@ -212,6 +216,25 @@ public class DatabaseHelper {
             Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
         }
         return found;
+    }
+    
+    public boolean isAdmin(String username, int groupId) { 
+        boolean flag = false;
+        String query = "SELECT isAdmin FROM `group_member` WHERE (group_id = ? AND username = ?)";
+        try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
+            dbStatement.setInt(1, groupId);
+            dbStatement.setString(2, username);
+            ResultSet rs = dbStatement.executeQuery();
+            if(rs.next()) {
+                if (rs.getInt("isAdmin") == 1) {
+                    flag = true;
+                }
+            }
+            dbStatement.close();   
+        } catch (SQLException ex) {
+            Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return flag;
     }
     
     public boolean addFriend(String username, String friendName) {
@@ -300,21 +323,27 @@ public class DatabaseHelper {
                 break;
             }
         }
-        String query = "INSERT INTO `group_member` (group_id, username, isAdmin) VALUES(?, ?, ?)";
-        try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
-            for (int i=0; i<members.size(); i++) {
-                dbStatement.setInt(1, groupId);
-                dbStatement.setString(2, members.get(i).toString());
-                dbStatement.setInt(3, 0);
-                dbStatement.executeUpdate();
-            }
-            dbStatement.close();
+        if (isAdmin(username, groupId)) {
+            String query = "INSERT INTO `group_member` (group_id, username, isAdmin) VALUES(?, ?, ?)";
+            try (PreparedStatement dbStatement = conn.prepareStatement(query)) {
+                for (int i=0; i<members.size(); i++) {
+                    JSONObject user = selectUser(members.get(i).toString());
+                    if (!user.isEmpty() && isFriend(username, members.get(i).toString())) {
+                        dbStatement.setInt(1, groupId);
+                        dbStatement.setString(2, members.get(i).toString());
+                        dbStatement.setInt(3, 0);
+                        dbStatement.executeUpdate();
+                    }
+                }
+                dbStatement.close();
 
-            System.out.println("Successfully add group members");
-        } catch (SQLException ex) {
-            Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("Successfully add group members");
+            } catch (SQLException ex) {
+                Logger.getLogger(DatabaseHelper.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            return true;
         }
-        return true;
+        return false;
     }
     
     public JSONArray getFriendsByUser(String username) {

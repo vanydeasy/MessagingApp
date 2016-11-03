@@ -128,21 +128,23 @@ public class MessagingAppServer {
                         JSONObject temp = new JSONObject();
                         try {
                             temp = (JSONObject)parse.parse(groupList.get(i).toString());
+                            System.out.println(temp);
+                            if (temp.get("name").toString().equals(group_name)) {
+                                group_id = Integer.parseInt(temp.get("group_id").toString());
+                                System.out.println(group_id);
+                                if(dbHelper.removeGroupMember(group_id, username)) {
+                                    response.put("status", true);
+                                    response.put("message", " You left the group.");
+                                }
+                                else {
+                                    response.put("status", false);
+                                    response.put("message", "Failed.");
+                                }
+                                break;
+                            }
                         } catch (ParseException ex) {
                             Logger.getLogger(MessagingAppServer.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                        if (temp.get("name").equals(group_name)) {
-                            group_id = Integer.parseInt(temp.get("group_id").toString());
-                            break;
-                        }
-                    }
-                    if(dbHelper.removeGroupMember(group_id, username)) {
-                        response.put("status", true);
-                        response.put("message", " You left the group.");
-                    }
-                    else {
-                        response.put("status", false);
-                        response.put("message", "Failed.");
                     }
                 }
                 break;
@@ -268,7 +270,7 @@ public class MessagingAppServer {
                 }
                 else {
                     response.put("status", false);
-                    response.put("message", "Failed.");
+                    response.put("message", "You are not admin of this group.");
                 }
                 break;
             case GET_FRIEND:
